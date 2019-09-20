@@ -1,0 +1,12 @@
+{
+  "name": "express-attack-redis",
+  "version": "0.1.0",
+  "description": "Redis store for express-attack",
+  "main": "index.js",
+  "author": "ocowchun@gmail.com",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^3.5.3",
+    "redis": "^2.8.0"
+  }
+}
