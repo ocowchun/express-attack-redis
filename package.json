@@ -1,13 +1,12 @@
 {
   "name": "express-attack-redis",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "homepage": "https://github.com/ocowchun/express-attack-redis",
   "description": "Redis store for express-attack",
   "main": "index.js",
   "author": "ocowchun@gmail.com",
   "license": "MIT",
   "dependencies": {
-    "bluebird": "^3.5.3",
-    "redis": "^2.8.0"
+    "redis": "^3.0.0"
   }
 }

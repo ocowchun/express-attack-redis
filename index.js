@@ -1,8 +1,6 @@
+const { promisify } = require('util')
 const redis = require('redis')
-const bluebird = require('bluebird')
 const TOTAL_RETRY_TIME = 10 * 1000
-
-bluebird.promisifyAll(redis)
 
 function createRedisClient(url) {
   const options = {
@@ -24,35 +22,48 @@ function createRedisClient(url) {
       }
       // reconnect after
       return Math.min(options.attempt * 100, 3000)
-    }
+    },
   }
 
   return redis.createClient(options)
 }
 
-function createRedisStore({ prefix = 'node-attack', redisUrl = null }) {
+function createRedisStore({ prefix = 'express-attack', redisUrl = null }) {
   if (redisUrl === null) {
     redisUrl = process.env.REDIS_URL
   }
   const redisClient = createRedisClient(redisUrl)
+  const getAsync = promisify(redisClient.get).bind(redisClient)
+  const setAsync = promisify(redisClient.set).bind(redisClient)
 
-  const increment = async (key, expire = 300) => {
+  const get = async (key, timestamp, period) => {
     try {
-      const multi = redisClient.multi()
       const redisKey = `${prefix}-${key}`
-      multi.incr(redisKey)
-      multi.expire(redisKey, expire)
-      const res = await multi.execAsync()
-      return res[0]
+      const result = await getAsync(redisKey)
+      if (result === null) {
+        return undefined
+      }
+      return Number.parseInt(result, 10)
     } catch (_err) {
-      return 0
+      return undefined
     }
   }
 
-  const cache = {
-    increment: increment
+  const set = async (key, timestamp, period) => {
+    try {
+      const redisKey = `${prefix}-${key}`
+      await setAsync(redisKey, timestamp, 'px', period)
+      return null
+    } catch (err) {
+      return err
+    }
   }
-  return cache
+
+  const store = {
+    get,
+    set,
+  }
+  return store
 }
 
 module.exports = createRedisStore
