@@ -1,10 +1,10 @@
 const { promisify } = require('util')
 const redis = require('redis')
 const TOTAL_RETRY_TIME = 10 * 1000
+const DEFAULT_CONNECT_TIMEOUT = 3000
 
-function createRedisClient(url) {
-  const options = {
-    url: url,
+function createRedisClient(options) {
+  const defaultOptions = {
     retry_strategy: function(opts) {
       if (opts.error && opts.error.code === 'ECONNREFUSED') {
         // End reconnecting on a specific error and flush all commands with
@@ -21,22 +21,20 @@ function createRedisClient(url) {
         return undefined
       }
       // reconnect after
-      return Math.min(options.attempt * 100, 3000)
+      return Math.min(options.attempt * 100, DEFAULT_CONNECT_TIMEOUT)
     },
+    connect_timeout: DEFAULT_CONNECT_TIMEOUT
   }
 
-  return redis.createClient(options)
+  return redis.createClient(Object.assign(defaultOptions, options))
 }
 
-function createRedisStore({ prefix = 'express-attack', redisUrl = null }) {
-  if (redisUrl === null) {
-    redisUrl = process.env.REDIS_URL
-  }
-  const redisClient = createRedisClient(redisUrl)
+function createRedisStore({ redisOptions, prefix = 'express-attack'}) {
+  const redisClient = createRedisClient(redisOptions)
   const getAsync = promisify(redisClient.get).bind(redisClient)
   const setAsync = promisify(redisClient.set).bind(redisClient)
 
-  const get = async (key, timestamp, period) => {
+  const get = async (key) => {
     try {
       const redisKey = `${prefix}-${key}`
       const result = await getAsync(redisKey)
@@ -49,10 +47,10 @@ function createRedisStore({ prefix = 'express-attack', redisUrl = null }) {
     }
   }
 
-  const set = async (key, timestamp, period) => {
+  const set = async (key, timestampMs, expiredMs) => {
     try {
       const redisKey = `${prefix}-${key}`
-      await setAsync(redisKey, timestamp, 'px', period)
+      await setAsync(redisKey, timestampMs, 'px', expiredMs)
       return null
     } catch (err) {
       return err
