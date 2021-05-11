@@ -1,6 +1,6 @@
 {
   "name": "express-attack-redis",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "homepage": "https://github.com/ocowchun/express-attack-redis",
   "description": "Redis store for express-attack",
   "main": "index.js",

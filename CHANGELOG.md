@@ -1,3 +1,6 @@
+## 0.3.0 (2021-05-11)
+- **BREAKING CHANGE** Adjust `createRedisStore` parameter, it take [redisOptions](https://github.com/NodeRedis/node-redis#options-object-properties) and `prefix`.
+
 ## 0.2.1 (2020-08-26)
 - Deal with Publish error.
 
